@@ -27,28 +27,55 @@ func example1() {
 	}
 	defer w.Close()
 
-	logger := logl.New(
-		logl.Config{
-			Handler: &logl.StreamHandler{
-				Output: w,
-				Format: logl.JsonFormat(),
-				//				Format: &logl.TextFormat{
-				//					HasLevel:      true,
-				//					Date:          true,
-				//					Time:          true,
-				//					Microseconds:  true,
-				//					ShieldSpecial: true,
-				//				},
+	hl := logl.NewHandleLogger(
+		logl.LevelDebug,
+		&logl.StreamHandler{
+			Output: w,
+			//Format: logl.FormatJSON(),
+			Format: &logl.FormatText{
+				HasLevel:      true,
+				Date:          true,
+				Time:          true,
+				Microseconds:  true,
+				ShieldSpecial: true,
 			},
-			Level: logl.LevelDebug,
 		},
 	)
 
 	r := newRandTime()
 	for i := 0; i < 1000; i++ {
-		//level := logl.Level(randRange(r, int(logl.LevelCritical), int(logl.LevelDebug)+1))
-		level := logl.LevelWarning
-		logger.Messagef(level, "id %d, text: %s", i, randText(r))
+		level := randLogLevel(r)
+		logMessage(hl, level, fmt.Sprintf("id %d, text: %s", i, randText(r)))
+	}
+}
+
+var levels = []logl.Level{
+	logl.LevelCritical,
+	logl.LevelError,
+	logl.LevelWarning,
+	logl.LevelInfo,
+	logl.LevelDebug,
+	logl.LevelTrace,
+}
+
+func randLogLevel(r *rand.Rand) logl.Level {
+	return levels[r.Intn(len(levels))]
+}
+
+func logMessage(l logl.Logger, level logl.Level, message string) {
+	switch level {
+	case logl.LevelCritical:
+		l.Critical(message)
+	case logl.LevelError:
+		l.Error(message)
+	case logl.LevelWarning:
+		l.Warning(message)
+	case logl.LevelInfo:
+		l.Info(message)
+	case logl.LevelDebug:
+		l.Debug(message)
+	case logl.LevelTrace:
+		l.Trace(message)
 	}
 }
 
